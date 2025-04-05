@@ -1,31 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SelfVerificationRoot } from "@selfxyz/contracts/contracts/abstract/SelfVerificationRoot.sol";
-
 import { CircuitConstants } from "@selfxyz/contracts/contracts/constants/CircuitConstants.sol";
 import { IIdentityVerificationHubV1 } from "@selfxyz/contracts/contracts/interfaces/IIdentityVerificationHubV1.sol";
-import { ISelfVerificationRoot } from "@selfxyz/contracts/contracts/interfaces/ISelfVerificationRoot.sol";
 import { IVcAndDiscloseCircuitVerifier } from
     "@selfxyz/contracts/contracts/interfaces/IVcAndDiscloseCircuitVerifier.sol";
 
-import { CircuitAttributeHandler } from "@selfxyz/contracts/contracts/libraries/CircuitAttributeHandler.sol";
-import { Formatter } from "@selfxyz/contracts/contracts/libraries/Formatter.sol";
-
-contract Post is SelfVerificationRoot, Ownable {
-    mapping(uint256 => bool) private _nullifiers;
+contract Post is SelfVerificationRoot, ERC20 {
+    address public immutable relayer;
 
     // restriction variable
     string public gender;
     string public nationality;
 
-    error RegisteredNullifier();
+    mapping(uint256 => bool) private _nullifiers;
 
-    error InvalidGender();
-    error InvalidNationality();
-    error InvalidAge();
+    error RegisteredNullifier();
+    error InvalidMsgSender(address msgSender);
+    error InvalidGender(string gender);
+    error InvalidNationality(string nationality);
+    error InvalidAge(uint256 age);
+
+    modifier onlyRelayer() {
+        require(msg.sender == relayer, InvalidMsgSender(msg.sender));
+        _;
+    }
 
     constructor(
         address _identityVerificationHub,
@@ -36,6 +37,9 @@ contract Post is SelfVerificationRoot, Ownable {
         bool _forbiddenCountriesEnabled,
         uint256[4] memory _forbiddenCountriesListPacked,
         bool[3] memory _ofacEnabled,
+        address _relayer,
+        string memory _name,
+        string memory _symbol,
         string memory _gender,
         string memory _nationality
     )
@@ -49,13 +53,17 @@ contract Post is SelfVerificationRoot, Ownable {
             _forbiddenCountriesListPacked, // Packed data representing the list of forbidden countries
             _ofacEnabled // Flag to enable OFAC check
         )
-        Ownable(_msgSender())
+        ERC20(_name, _symbol)
     {
+        relayer = _relayer;
         gender = _gender;
         nationality = _nationality;
     }
 
-    function verifySelfProof(IVcAndDiscloseCircuitVerifier.VcAndDiscloseProof memory proof) public override {
+    function verifySelfProof(IVcAndDiscloseCircuitVerifier.VcAndDiscloseProof memory proof, uint256 age)
+        public
+        onlyRelayer
+    {
         if (_scope != proof.pubSignals[CircuitConstants.VC_AND_DISCLOSE_SCOPE_INDEX]) {
             revert InvalidScope();
         }
@@ -80,16 +88,16 @@ contract Post is SelfVerificationRoot, Ownable {
             })
         );
 
-        if (_isValidCommenter(result.revealedDataPacked)) {
+        if (_isValidCommenter(result.revealedDataPacked, age)) {
             _nullifiers[result.nullifier] = true;
         }
     }
 
-    function _isValidCommenter(uint256[3] memory _revealedDataPacked)
-        // IIdentityVerificationHubV1.RevealedDataType[] memory _types
-        internal
-        returns (bool)
-    {
+    function sendRewardToken(address commenter) external onlyRelayer {
+        _mint(commenter, 1 ether);
+    }
+
+    function _isValidCommenter(uint256[3] memory _revealedDataPacked, uint256 age) private view returns (bool) {
         IIdentityVerificationHubV1.RevealedDataType[] memory types =
             new IIdentityVerificationHubV1.RevealedDataType[](3);
         types[0] = IIdentityVerificationHubV1.RevealedDataType.NATIONALITY;
@@ -100,13 +108,13 @@ contract Post is SelfVerificationRoot, Ownable {
             IIdentityVerificationHubV1(_identityVerificationHub).getReadableRevealedData(_revealedDataPacked, types);
 
         if (keccak256(abi.encodePacked(revealedData.gender)) != keccak256(abi.encodePacked(gender))) {
-            revert InvalidGender();
+            revert InvalidGender(revealedData.gender);
         } else if (keccak256(abi.encodePacked(revealedData.nationality)) != keccak256(abi.encodePacked(nationality))) {
-            revert InvalidNationality();
-        } else if (100 >= _verificationConfig.olderThan) {
-            revert InvalidAge();
+            revert InvalidNationality(revealedData.nationality);
+        } else if (age < _verificationConfig.olderThan) {
+            revert InvalidAge(age);
+        } else {
+            return true;
         }
-
-        return true;
     }
 }

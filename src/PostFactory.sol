@@ -29,6 +29,8 @@ contract PostFactory {
         uint256 _scope,
         bool _olderThanEnabled,
         uint256 _olderThan,
+        string memory _name,
+        string memory _symbol,
         string memory _gender,
         string memory _nationality
     ) external onlyRelayer returns (uint256 postId, address postAddress) {
@@ -43,6 +45,9 @@ contract PostFactory {
                 false,
                 [uint256(0), uint256(0), uint256(0), uint256(0)],
                 [false, false, false],
+                relayer,
+                _name,
+                _symbol,
                 _gender,
                 _nationality
             )
