@@ -31,12 +31,12 @@ contract Post is SelfVerificationRoot, ERC20 {
     constructor(
         address _identityVerificationHub,
         uint256 _scope,
-        uint256 _attestationId,
+        // uint256 _attestationId,
         bool _olderThanEnabled,
         uint256 _olderThan,
-        bool _forbiddenCountriesEnabled,
-        uint256[4] memory _forbiddenCountriesListPacked,
-        bool[3] memory _ofacEnabled,
+        // bool _forbiddenCountriesEnabled,
+        // uint256[4] memory _forbiddenCountriesListPacked,
+        // bool[3] memory _ofacEnabled,
         address _relayer,
         string memory _name,
         string memory _symbol,
@@ -46,12 +46,12 @@ contract Post is SelfVerificationRoot, ERC20 {
         SelfVerificationRoot(
             _identityVerificationHub, // Address of our Verification Hub, e.g., "0x77117D60eaB7C044e785D68edB6C7E0e134970Ea"
             _scope, // An application-specific identifier for the integrated contract
-            _attestationId, // The id specifying the type of document to verify (e.g., 1 for passports)
+            1, // The id specifying the type of document to verify (e.g., 1 for passports)
             _olderThanEnabled, // Flag to enable age verification
             _olderThan, // The minimum age required for verification
-            _forbiddenCountriesEnabled, // Flag to enable forbidden countries verification
-            _forbiddenCountriesListPacked, // Packed data representing the list of forbidden countries
-            _ofacEnabled // Flag to enable OFAC check
+            false, // Flag to enable forbidden countries verification
+            [uint256(0), uint256(0), uint256(0), uint256(0)], // Packed data representing the list of forbidden countries
+            [false, false, false] // Flag to enable OFAC check
         )
         ERC20(_name, _symbol)
     {
@@ -108,11 +108,17 @@ contract Post is SelfVerificationRoot, ERC20 {
             IIdentityVerificationHubV1(_identityVerificationHub).getReadableRevealedData(_revealedDataPacked, types);
 
         if (keccak256(abi.encodePacked(revealedData.gender)) != keccak256(abi.encodePacked(gender))) {
-            revert InvalidGender(revealedData.gender);
+            if (keccak256(abi.encodePacked(revealedData.gender)) != keccak256(abi.encodePacked(""))) {
+                revert InvalidGender(revealedData.gender);
+            }
         } else if (keccak256(abi.encodePacked(revealedData.nationality)) != keccak256(abi.encodePacked(nationality))) {
-            revert InvalidNationality(revealedData.nationality);
+            if (keccak256(abi.encodePacked(revealedData.nationality)) != keccak256(abi.encodePacked(""))) {
+                revert InvalidNationality(revealedData.nationality);
+            }
         } else if (age < _verificationConfig.olderThan) {
-            revert InvalidAge(age);
+            if (age != 0) {
+                revert InvalidAge(age);
+            }
         } else {
             return true;
         }
