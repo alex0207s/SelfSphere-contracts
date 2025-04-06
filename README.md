@@ -1,3 +1,12 @@
+## Contract Architecture
+
+![Screenshot](architecture.png)
+
+### Scenario by Role
+
+1. Author: An author creates a post and has the ability to set who can comment on it. Furthermore, the author can determine which comments they like and send a reward token (ERC-20) to the commenter
+2. Commenter: Verifies the personal information they wish to reveal before posting a comment.
+
 ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
