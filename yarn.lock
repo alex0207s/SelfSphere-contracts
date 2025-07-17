@@ -2,9 +2,10 @@
 # yarn lockfile v1
 
 
-"@ashpect/smt@git+https://github.com/ashpect/smt.git#main":
+"@ashpect/smt@https://github.com/ashpect/smt#main":
   version "1.0.0"
-  resolved "git+https://github.com/ashpect/smt.git#4f73fd24adb06a7f8efd6fd2d3ed58e9e2f2691a"
+  uid "4f73fd24adb06a7f8efd6fd2d3ed58e9e2f2691a"
+  resolved "https://github.com/ashpect/smt#4f73fd24adb06a7f8efd6fd2d3ed58e9e2f2691a"
 
 "@babel/code-frame@^7.12.13":
   version "7.26.2"
@@ -438,9 +439,9 @@
     buffer "^6.0.3"
 
 "@openzeppelin/contracts-upgradeable@^5.1.0":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-5.2.0.tgz#caf9a6eaf4f16d7f90f9b45a6db4e7b125f4b13b"
-  integrity sha512-mZIu9oa4tQTlGiOJHk6D3LdJlqFqF6oNOSn6S6UVJtzfs9UsY9/dhMEbAVTwElxUtJnjpf6yA062+oBp+eOyPg==
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-5.4.0.tgz#a325066da702d0a8be091eb17136d3e9c92cc76a"
+  integrity sha512-STJKyDzUcYuB35Zub1JpWW58JxvrFFVgQ+Ykdr8A9PGXgtq/obF5uoh07k2XmFyPxfnZdPdBdhkJ/n2YxJ87HQ==
 
 "@openzeppelin/contracts@^5.0.2":
   version "5.2.0"
